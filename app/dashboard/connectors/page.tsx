@@ -35,7 +35,7 @@ export default function ConnectorsPage() {
 
   const [config, setConfig] = useState({
     github: { org: "", token: "" },
-    slack: { botToken: "", inviteLink: "" },
+    slack: { botToken: "", userToken: "", inviteLink: "" },
   });
 
   const [status, setStatus] = useState({
@@ -308,6 +308,19 @@ export default function ConnectorsPage() {
                 />
                 <p className="text-[11px] text-muted-foreground pt-1 leading-tight">
                   You can obtain this from the "OAuth & Permissions" tab of your Slack App configuration dashboard. Look for tokens starting with `xoxb-`.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-medium text-sm">Admin User Token <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
+                <Input
+                  type="password"
+                  placeholder="xoxp-••••••••"
+                  value={config.slack.userToken}
+                  onChange={(e) => setConfig({ ...config, slack: { ...config.slack, userToken: e.target.value } })}
+                />
+                <p className="text-[11px] text-muted-foreground pt-1 leading-tight">
+                  An Admin User Token (`xoxp-`) is required to automatically kick users from channels the bot didn't create.
                 </p>
               </div>
             </div>

@@ -13,6 +13,7 @@ const ConnectorSchema = new mongoose.Schema({
     },
     slack: {
         botToken: { type: String }, // Encrypted
+        userToken: { type: String }, // Encrypted
         inviteLink: { type: String },
     },
     jira: {

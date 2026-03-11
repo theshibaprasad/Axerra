@@ -37,6 +37,7 @@ export async function GET() {
             },
             slack: {
                 isConfigured: !!(connector.slack?.botToken || connector.slack?.inviteLink),
+                hasUserToken: !!connector.slack?.userToken,
                 inviteLink: connector.slack?.inviteLink,
             },
             jira: {
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
         // Update Slack
         if (slack) {
             if (slack.botToken) updateFields['slack.botToken'] = encrypt(slack.botToken);
+            if (slack.userToken) updateFields['slack.userToken'] = encrypt(slack.userToken);
             if (slack.inviteLink !== undefined) updateFields['slack.inviteLink'] = slack.inviteLink;
         }
 

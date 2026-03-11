@@ -282,6 +282,7 @@ export async function deprovisionProjectEmployee(projectId: string, employeeId: 
         if (connector.slack?.botToken && project.slackChannelName) {
             try {
                 const token = decrypt(connector.slack.botToken);
+                const userToken = connector.slack?.userToken ? decrypt(connector.slack.userToken) : null;
                 
                 // 1. Find Slack user by email
                 console.log(`[Slack API] GET /users.lookupByEmail for ${employee.email}`);
@@ -319,10 +320,12 @@ export async function deprovisionProjectEmployee(projectId: string, employeeId: 
                         // 3. Kick user from channel
                         await logAction(employee.company, employee._id, employee.name, 'slack', 'deprovision_project', 'pending', `Removing Slack user ${slackUserId} from channel ${channelId}`);
                         console.log(`[Slack API] POST /conversations.kick`);
+                        const kickToken = userToken || token;
+                        console.log(`[Slack API] Using token starting with: ${kickToken.substring(0, 5)}... (isUserToken: ${kickToken === userToken})`);
                         const kickRes = await fetch(`https://slack.com/api/conversations.kick`, {
                             method: 'POST',
                             headers: {
-                                'Authorization': `Bearer ${token}`,
+                                'Authorization': `Bearer ${kickToken}`,
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
@@ -335,7 +338,7 @@ export async function deprovisionProjectEmployee(projectId: string, employeeId: 
                         if (kickData.ok || kickData.error === 'not_in_channel') {
                             await logAction(employee.company, employee._id, employee.name, 'slack', 'deprovision_project', 'success', `User removed from Slack channel ${project.slackChannelName}`);
                         } else if (kickData.error === 'restricted_action' || kickData.error === 'cant_kick_from_general') {
-                            await logAction(employee.company, employee._id, employee.name, 'slack', 'deprovision_project', 'failed', `Bot lacks permission to remove users from channel ${project.slackChannelName}. Please remove manually or update Workspace Settings.`);
+                            await logAction(employee.company, employee._id, employee.name, 'slack', 'deprovision_project', 'failed', `Bot lacks permission to remove users from channel ${project.slackChannelName}. Please provide an Admin User Token in Connectors settings or remove manually.`);
                             console.warn(`[Slack API] Bot lacks permission to kick user ${slackUserId} from channel ${channelId} (${kickData.error})`);
                         } else {
                             throw new Error(`Failed to kick from Slack channel: ${kickData.error}`);
